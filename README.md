@@ -14,3 +14,7 @@ This package creates two commands described below:
   
 By default each command reads from STDIN and writes to STDOUT, but it is possible to use the "-i"
 and "-o" flags to read and write from output files.
+
+You must set the environment variable `KMS_KEYSPEC` to the Cloud KMS keyspec
+in the form
+`projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}`.

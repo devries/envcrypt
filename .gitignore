@@ -1,0 +1,4 @@
+*~
+.*.swp
+cmd/pgencrypt/pgencrypt
+cmd/pgdecrypt/pgdecrypt

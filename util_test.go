@@ -1,12 +1,16 @@
 package envcrypt
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
 
 func TestRoundtrip(t *testing.T) {
-	keyspec := "projects/single-arcanum-633/locations/global/keyRings/personal/cryptoKeys/testkey"
+	keyspec := os.Getenv("KMS_KEYSPEC")
+	if keyspec == "" {
+		keyspec = "projects/single-arcanum-633/locations/global/keyRings/personal/cryptoKeys/testkey"
+	}
 	plaintext := "This is a test message."
 
 	message, err := EncryptMessage(keyspec, strings.NewReader(plaintext))

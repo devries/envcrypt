@@ -13,11 +13,15 @@ import (
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 
+// EncodedMessage is a structure which containes an encrypted key as well as the
+// encrypted ciphertext. It can be serialized to JSON.
 type EncodedMessage struct {
 	EncryptedKey []byte `json:"encrypted_key,omitempty"`
 	Ciphertext   []byte `json:"ciphertext,omitempty"`
 }
 
+// EnvelopeKey contains both an unencrypted and encrypted version of the encryption
+// key for a message.
 type EnvelopeKey struct {
 	PlainKey     []byte
 	EncryptedKey []byte
@@ -73,6 +77,10 @@ func decryptKey(keyspec string, encKey []byte) ([]byte, error) {
 	return resp.Plaintext, nil
 }
 
+// EncryptMessage encrypts the data from the message Reader using a random encryption
+// key, and then encrypts that key using the GCP CloudKMS key represented by keyspec.
+// keyspec should be in the format project/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}.
+// The function returns an EncodedMessage and an error if there is an error.
 func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) {
 	key, err := generateKeyAndEncryptedKey(keyspec)
 	if err != nil {
@@ -110,6 +118,9 @@ func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) 
 	return &cryptoMessage, nil
 }
 
+// DecryptMessage takes a Cloud KMS keyspec, a pointer to an EncodedMessage, and
+// writes the decrypted message to the Writer w, returning an error if any.
+// keyspec is formated as project/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}.
 func DecryptMessage(keyspec string, encMessage *EncodedMessage, w io.Writer) error {
 	key, err := decryptKey(keyspec, encMessage.EncryptedKey)
 	if err != nil {

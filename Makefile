@@ -7,6 +7,7 @@ INSTALLS := $(patsubst %,$(PREFIX)/bin/%,$(BINARIES))
 UNINSTALLS := $(INSTALLS)
 TAREXTRAS := README.md LICENSE Makefile 
 TARFILE := envcrypt.tar.gz
+TARDIRECTORY := envcrypt
 
 bin: $(BUILDS)
 
@@ -34,5 +35,9 @@ uninstall:
 tar: $(TARFILE)
 	
 $(TARFILE): $(SOURCES) $(TESTS) $(TAREXTRAS)
-	tar cvfz $@ $^
-	
+	mkdir -p $(TARDIRECTORY)
+	tar cf - $^ | tar xf - -C $(TARDIRECTORY)
+	tar cvfz $@ $(TARDIRECTORY)
+	rm -rf $(TARDIRECTORY)
+
+.PHONY: bin test install clean uninstall tar

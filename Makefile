@@ -1,7 +1,7 @@
 BINARIES := pgdecrypt pgencrypt
-BUILDS := $(patsubst %,build/%,$(BINARIES))
-SOURCES := go.mod go.sum util.go $(patsubst %,cmd/%/*.go,$(BINARIES))
 PREFIX := /usr/local
+SOURCES := go.mod go.sum util.go $(patsubst %,cmd/%/*.go,$(BINARIES))
+BUILDS := $(patsubst %,build/%,$(BINARIES))
 INSTALLS := $(patsubst %,$(PREFIX)/bin/%,$(BINARIES))
 
 bin: $(BUILDS)

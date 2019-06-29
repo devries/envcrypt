@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -30,13 +31,13 @@ type EnvelopeKey struct {
 func generateKeyAndEncryptedKey(keyspec string) (*EnvelopeKey, error) {
 	newkey := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, newkey); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to generate random numbers: %v", err)
 	}
 
 	ctx := context.Background()
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create KMS client: %v", err)
 	}
 
 	encreq := &kmspb.EncryptRequest{
@@ -46,7 +47,7 @@ func generateKeyAndEncryptedKey(keyspec string) (*EnvelopeKey, error) {
 
 	resp, err := client.Encrypt(ctx, encreq)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to encrypt key: %v", err)
 	}
 
 	eKey := EnvelopeKey{
@@ -61,7 +62,7 @@ func decryptKey(keyspec string, encKey []byte) ([]byte, error) {
 	ctx := context.Background()
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create KMS client: %v", err)
 	}
 
 	decreq := &kmspb.DecryptRequest{
@@ -71,7 +72,7 @@ func decryptKey(keyspec string, encKey []byte) ([]byte, error) {
 
 	resp, err := client.Decrypt(ctx, decreq)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to decrypt key: %v", err)
 	}
 
 	return resp.Plaintext, nil
@@ -84,28 +85,27 @@ func decryptKey(keyspec string, encKey []byte) ([]byte, error) {
 func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) {
 	key, err := generateKeyAndEncryptedKey(keyspec)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to generate key: %v", err)
 	}
 
 	block, err := aes.NewCipher(key.PlainKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create cipher: %v", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create GCM cipher: %v", err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to generate nonce: %v", err)
 	}
 
 	plaintext, err := ioutil.ReadAll(message)
 	if err != nil {
-		return nil, err
-
+		return nil, fmt.Errorf("unable to read message: %v", err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
@@ -124,17 +124,17 @@ func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) 
 func DecryptMessage(keyspec string, encMessage *EncodedMessage, w io.Writer) error {
 	key, err := decryptKey(keyspec, encMessage.EncryptedKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to decrypt key: %v", err)
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create cipher: %v", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create GCM cipher: %v", err)
 	}
 
 	if len(encMessage.Ciphertext) < gcm.NonceSize() {
@@ -146,11 +146,11 @@ func DecryptMessage(keyspec string, encMessage *EncodedMessage, w io.Writer) err
 
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to read from cipher: %v", err)
 	}
 
 	if _, err := w.Write(plaintext); err != nil {
-		return err
+		return fmt.Errorf("unable to write to writer: %v", err)
 	}
 
 	return nil

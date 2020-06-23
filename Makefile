@@ -9,30 +9,30 @@ TAREXTRAS := README.md LICENSE Makefile
 TARFILE := envcrypt.tar.gz
 TARDIRECTORY := envcrypt
 
-bin: $(BUILDS)
+build: $(BUILDS) ## Build binaries
 
 $(BUILDS): $(SOURCES)
 	mkdir -p build
 	go build -o $@ $(patsubst build/%,./cmd/%,$@)
 
-test: $(SOURCES) $(TESTS)
+test: $(SOURCES) $(TESTS) ## Run tests
 	go test
 
-install: $(INSTALLS)
+install: $(INSTALLS) ## Install binaries into $(PREFIX)/bin
 
 $(INSTALLS): $(PREFIX)/bin/%: build/%
 	install -d $(PREFIX)/bin
 	install -m 755 $< $@
 
-clean:
+clean: ## Remove all local artifacts
 	rm -rf build || true
-	rm $(TARFILE)
+	-rm $(TARFILE)
 	go clean
 
-uninstall:
+uninstall: ## Uninstall the binaries
 	rm $(INSTALLS) || true
 
-tar: $(TARFILE)
+tar: $(TARFILE) ## Tar up the source
 	
 $(TARFILE): $(SOURCES) $(TESTS) $(TAREXTRAS)
 	mkdir -p $(TARDIRECTORY)
@@ -40,4 +40,8 @@ $(TARFILE): $(SOURCES) $(TESTS) $(TAREXTRAS)
 	tar cvfz $@ $(TARDIRECTORY)
 	rm -rf $(TARDIRECTORY)
 
-.PHONY: bin test install clean uninstall tar
+help: ## Show this help
+	@echo "These are the make commands for the pwned CLI.\n"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: build test install clean uninstall tar help

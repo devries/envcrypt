@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	cloudkms "cloud.google.com/go/kms/apiv1"
-	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
+	// kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
+	"cloud.google.com/go/kms/apiv1/kmspb"
 )
 
 // EncodedMessage is a structure which containes an encrypted key as well as the
@@ -103,7 +103,7 @@ func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) 
 		return nil, fmt.Errorf("unable to generate nonce: %v", err)
 	}
 
-	plaintext, err := ioutil.ReadAll(message)
+	plaintext, err := io.ReadAll(message)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read message: %v", err)
 	}

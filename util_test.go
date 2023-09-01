@@ -9,7 +9,8 @@ import (
 func TestRoundtrip(t *testing.T) {
 	keyspec := os.Getenv("KMS_KEYSPEC")
 	if keyspec == "" {
-		keyspec = "projects/single-arcanum-633/locations/global/keyRings/personal/cryptoKeys/testkey"
+		t.Errorf("Must specify KMS_KEYSPEC environment variable: project/{{ project_name }}/locations/{{ location }}/keyRings/{{ keyRing }}/cryptoKeys/{{ keyname }}")
+		return
 	}
 	plaintext := "This is a test message."
 

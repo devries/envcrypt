@@ -138,7 +138,7 @@ func DecryptMessage(keyspec string, encMessage *EncodedMessage, w io.Writer) err
 	}
 
 	if len(encMessage.Ciphertext) < gcm.NonceSize() {
-		return errors.New("Ciphertext is too short")
+		return errors.New("ciphertext is too short")
 	}
 
 	nonce := encMessage.Ciphertext[:gcm.NonceSize()]

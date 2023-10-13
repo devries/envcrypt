@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -59,7 +60,8 @@ func main() {
 		os.Exit(2)
 	}
 
-	err = envcrypt.DecryptMessage(keyspec, &message, fout)
+	ctx := context.Background()
+	err = envcrypt.DecryptMessage(ctx, keyspec, &message, fout)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error decrypting message: %s\n", err)
 		os.Exit(2)

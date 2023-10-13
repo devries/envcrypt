@@ -1,6 +1,7 @@
 package envcrypt
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -14,14 +15,15 @@ func TestRoundtrip(t *testing.T) {
 	}
 	plaintext := "This is a test message."
 
-	message, err := EncryptMessage(keyspec, strings.NewReader(plaintext))
+	ctx := context.Background()
+	message, err := EncryptMessage(ctx, keyspec, strings.NewReader(plaintext))
 	if err != nil {
 		t.Errorf("Error encrypting plaintext: %q", err)
 		return
 	}
 
 	var b strings.Builder
-	err = DecryptMessage(keyspec, message, &b)
+	err = DecryptMessage(ctx, keyspec, message, &b)
 	if err != nil {
 		t.Errorf("Error decrypting plaintext: %q", err)
 		return

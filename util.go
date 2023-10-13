@@ -28,13 +28,12 @@ type EnvelopeKey struct {
 	EncryptedKey []byte
 }
 
-func generateKeyAndEncryptedKey(keyspec string) (*EnvelopeKey, error) {
+func generateKeyAndEncryptedKey(ctx context.Context, keyspec string) (*EnvelopeKey, error) {
 	newkey := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, newkey); err != nil {
 		return nil, fmt.Errorf("unable to generate random numbers: %v", err)
 	}
 
-	ctx := context.Background()
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create KMS client: %v", err)
@@ -58,8 +57,7 @@ func generateKeyAndEncryptedKey(keyspec string) (*EnvelopeKey, error) {
 	return &eKey, nil
 }
 
-func decryptKey(keyspec string, encKey []byte) ([]byte, error) {
-	ctx := context.Background()
+func decryptKey(ctx context.Context, keyspec string, encKey []byte) ([]byte, error) {
 	client, err := cloudkms.NewKeyManagementClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create KMS client: %v", err)
@@ -82,8 +80,8 @@ func decryptKey(keyspec string, encKey []byte) ([]byte, error) {
 // key, and then encrypts that key using the GCP CloudKMS key represented by keyspec.
 // keyspec should be in the format project/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}.
 // The function returns an EncodedMessage and an error if there is an error.
-func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) {
-	key, err := generateKeyAndEncryptedKey(keyspec)
+func EncryptMessage(ctx context.Context, keyspec string, message io.Reader) (*EncodedMessage, error) {
+	key, err := generateKeyAndEncryptedKey(ctx, keyspec)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate key: %v", err)
 	}
@@ -121,8 +119,8 @@ func EncryptMessage(keyspec string, message io.Reader) (*EncodedMessage, error) 
 // DecryptMessage takes a Cloud KMS keyspec, a pointer to an EncodedMessage, and
 // writes the decrypted message to the Writer w, returning an error if any.
 // keyspec is formated as project/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}.
-func DecryptMessage(keyspec string, encMessage *EncodedMessage, w io.Writer) error {
-	key, err := decryptKey(keyspec, encMessage.EncryptedKey)
+func DecryptMessage(ctx context.Context, keyspec string, encMessage *EncodedMessage, w io.Writer) error {
+	key, err := decryptKey(ctx, keyspec, encMessage.EncryptedKey)
 	if err != nil {
 		return fmt.Errorf("unable to decrypt key: %v", err)
 	}
